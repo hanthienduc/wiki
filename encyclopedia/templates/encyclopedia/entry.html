@@ -6,8 +6,8 @@
 
 {% block body %}
 
-<p>{{ entry }}</p>
-
+{{ entry|safe }}
+<br />
 <form action="{% url 'encyclopedia:edit_page' %}" method="POST">
     {% csrf_token %}
     <input type="hidden" name="title" value="{{title}}">

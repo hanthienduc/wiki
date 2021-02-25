@@ -5,10 +5,12 @@
 {% endblock %}
 
 {% block body %}
-    <h1>Welcome to {{title_page}}</h1>
-    <form action="{% url 'encyclopedia:create_page' %}" method="POST">
+    <h1>You are Editting: {{title}}</h1>
+    <form action="{% url 'encyclopedia:save_edit' %}" method="POST">
         {% csrf_token %}
         {{formedit.as_p}}
+
+        <input type="hidden" name="title" value="{{title}}" >
         
         <button type="submit">Save</button>
     </form>

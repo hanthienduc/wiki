@@ -5,6 +5,9 @@ from django.http import HttpResponse, HttpResponseRedirect
 from . import util
 from html.parser import HTMLParser
 
+from random import randint
+
+import markdown2
 
 class HTMLFilter(HTMLParser):
     text = ""
@@ -38,7 +41,7 @@ def entry(request, name):
     else:
         return render(request, "encyclopedia/entry.html", {
             "title": name.upper(),
-            "entry": util.get_entry(name),
+            "entry": markdown2.markdown(util.get_entry(name)),
         })
 
 
@@ -79,11 +82,6 @@ class NewPageForm(forms.Form):
     content = forms.CharField(
         label="content", widget=forms.Textarea)
 
-    def editForm(self, title, content):
-        self.title = forms.CharField(label="title", initial={title})
-        self.content = forms.CharField(
-            label="content", widget=forms.Textarea, initial={content})
-
 
 def create_page(request):
     if request.method == "POST":
@@ -120,9 +118,8 @@ def create_page(request):
 
 
 class EditForm(forms.Form):
-    title = forms.CharField(label="title", initial={title})
     content = forms.CharField(
-        label="content", widget=forms.Textarea, initial={content})
+        label="content", widget=forms.Textarea)
 
 
 def edit_page(request):
@@ -130,12 +127,21 @@ def edit_page(request):
     if(request.method == "POST"):
 
         if 'title' and 'content' in request.POST:
-            title = 'You editing for: %r' % request.POST['title']
+            title = request.POST['title']
             f = HTMLFilter()
             f.feed(request.POST['content'])
             content = f.text
+
+            initial_dict = {
+                "content": content
+            }
+
+            form = EditForm(request.POST or None, initial=initial_dict)
+
             return render(request, "encyclopedia/edit.html", {
-                "formedit": EditForm(title, content)
+                "formedit": form,
+                "title": title,
+                "content": content
             }
             )
         else:
@@ -145,8 +151,70 @@ def edit_page(request):
 
         return HttpResponse("Invalid data")
 
-
     return render(request, "encyclopedia/edit.html", {
         "formedit": EditForm()
     }
     )
+
+
+class SaveEditForm(forms.Form):
+    title = forms.CharField(label="title")
+    content = forms.CharField(
+        label="content", widget=forms.Textarea)
+
+
+def save_edit(request):
+
+    if(request.method == "POST"):
+
+        form = SaveEditForm(request.POST)
+
+        if form.is_valid():
+
+            title = form.cleaned_data["title"]
+            content = form.cleaned_data["content"]
+
+            checkEntry = util.get_entry(title)
+
+            if checkEntry:
+
+                util.save_entry(title, content)
+                return render(request, "encyclopedia/entry.html", {
+                    "title": title,
+                    "entry": util.get_entry(title)
+                })
+            else:
+                return render(request, "encyclopedia/error.html", {
+                    "title": "Form invalid"
+                })
+        else:
+            initial_dict = {
+                "title": title,
+                "content": content
+            }
+            form = SaveEditForm(request.POST or None, initial=initial_dict)
+
+            return render(request, "encyclopedia/edit.html", {
+                "formedit": form,
+                "title": title,
+                "content": content
+            }
+            )
+
+
+def random_page(request):
+    # get all entries title
+    entriesTitle = util.list_entries()
+    
+    # create random number based on entries length
+    value = randint(0, len(entriesTitle) - 1)
+    # create random title based on random number
+    ranDomTitle = entriesTitle[value]
+    # get list entry based on random number
+    entry = util.get_entry(ranDomTitle)
+
+    # render the entry with the data
+    return render(request, "encyclopedia/entry.html", {
+        "title": ranDomTitle.upper(),
+        "entry": markdown2.markdown(entry),
+    })
