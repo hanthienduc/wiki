@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block body %}
-    <h1>Welcome to {{title_page}}</h1>
+    <h1>{{title_page}}</h1>
     <form action="{% url 'encyclopedia:create_page' %}" method="POST">
         {% csrf_token %}
         {{pageform.as_p}}

@@ -9,6 +9,7 @@ from random import randint
 
 import markdown2
 
+
 class HTMLFilter(HTMLParser):
     text = ""
 
@@ -42,6 +43,7 @@ def entry(request, name):
         return render(request, "encyclopedia/entry.html", {
             "title": name.upper(),
             "entry": markdown2.markdown(util.get_entry(name)),
+            "entryToSend": util.get_entry(name),
         })
 
 
@@ -61,8 +63,9 @@ def search(request):
 
             if searchResult:
                 return render(request, "encyclopedia/entry.html", {
-                    "title": search,
-                    "entry": util.get_entry(search)
+                    "title": search.upper(),
+                    "entry": markdown2.markdown(util.get_entry(search)),
+                    "entryToSend": util.get_entry(search),
                 })
 
             else:
@@ -97,8 +100,9 @@ def create_page(request):
 
                 util.save_entry(title, content)
                 return render(request, "encyclopedia/entry.html", {
-                    "title": title,
-                    "entry": util.get_entry(title)
+                    "title": title.upper(),
+                    "entry": markdown2.markdown(util.get_entry(title)),
+                    "entryToSend": util.get_entry(title),
                 })
             else:
                 return render(request, "encyclopedia/create.html", {
@@ -180,8 +184,9 @@ def save_edit(request):
 
                 util.save_entry(title, content)
                 return render(request, "encyclopedia/entry.html", {
-                    "title": title,
-                    "entry": util.get_entry(title)
+                    "title": title.upper(),
+                    "entry": markdown2.markdown(util.get_entry(title)),
+                    "entryToSend": util.get_entry(title),
                 })
             else:
                 return render(request, "encyclopedia/error.html", {
@@ -205,7 +210,7 @@ def save_edit(request):
 def random_page(request):
     # get all entries title
     entriesTitle = util.list_entries()
-    
+
     # create random number based on entries length
     value = randint(0, len(entriesTitle) - 1)
     # create random title based on random number
@@ -217,4 +222,5 @@ def random_page(request):
     return render(request, "encyclopedia/entry.html", {
         "title": ranDomTitle.upper(),
         "entry": markdown2.markdown(entry),
+        "entryToSend": entry,
     })
